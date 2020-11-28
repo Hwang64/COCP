@@ -4,12 +4,12 @@ import mmcv
 import numpy as np
 from mmcv.parallel import DataContainer as DC
 from torch.utils.data import Dataset
-
+from pycocotools.coco import COCO
 from .transforms import (ImageTransform, BboxTransform, MaskTransform,
                          Numpy2Tensor)
 from .utils import to_tensor, random_scale
 from .extra_aug import ExtraAugmentation
-
+from mmdet.datasets.COCP import is_proc
 from instaboost import get_new_data, InstaBoostConfig
 
 class CustomDataset(Dataset):
@@ -191,9 +191,13 @@ class CustomDataset(Dataset):
         ann_ids = self.coco.getAnnIds(imgIds=[img_id])
         ann_info = self.coco.loadAnns(ann_ids)
         #------------------------AUG BEGIN-------------------------------------------------
-        aug_flag = np.random.choice([0,1],p=[0.5,0.5])
-        if aug_flag:
-            ann_info, img = get_new_data(ann_info, img, None, background=None)
+        #aug_flag = np.random.choice([0,1],p=[0.5,0.5])
+        #if aug_flag:
+        #    ann_info, img = get_new_data(ann_info, img, None, background=None)
+        #------------------------AUG END---------------------------------------------------
+        #------------------------AUG BEGIN-------------------------------------------------
+        coco = COCO('/share/Dataset/MSCOCO/annotations/instances_train2017.json')
+        img = is_proc(coco, img_id, ann_info, img)
         #------------------------AUG END---------------------------------------------------
         ann = self._parse_ann_info(ann_info, self.with_mask)
         #------------------------expand function get_ann_info------------------------------
